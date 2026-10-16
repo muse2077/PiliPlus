@@ -44,8 +44,7 @@ class MineController extends GetxController with AccountMixin {
   ThemeType get nextThemeType =>
       ThemeType.values[(themeType.value.index + 1) % ThemeType.values.length];
 
-  static RxBool anonymity =
-      (Accounts.account.isNotEmpty && !Accounts.heartbeat.isLogin).obs;
+  static RxBool anonymity = Accounts.isAnonymity.obs;
 
   late final list = <({IconData icon, String title, VoidCallback onTap})>[
     (
@@ -201,11 +200,11 @@ class MineController extends GetxController with AccountMixin {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    '搜索不携带身份信息\n'
-                    '不产生查询或播放记录\n'
-                    '点赞等其它操作不受影响\n'
-                    '播放进度信息跟随视频取流\n'
-                    '上次观看分p信息跟随主账号\n'
+                    '搜索、推荐、取流和播放心跳使用匿名会话\n'
+                    '不向登录账号写入观看历史或播放进度\n'
+                    '本地续播进度仍保存在本机\n'
+                    '原账号 Cookie 保持不变\n'
+                    '点赞、评论等主动操作仍按原有账号设置执行\n'
                     '(前往隐私设置了解详情)',
                     style: theme.textTheme.bodySmall,
                   ),

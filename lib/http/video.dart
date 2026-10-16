@@ -1089,7 +1089,7 @@ abstract final class VideoHttp {
     required int playurlType, // ugc 1, pgc 2
     int? qn,
   }) async {
-    final accessKey = Accounts.get(AccountType.video).accessKey;
+    final accessKey = Accounts.passiveAccessKey(AccountType.video);
     final params = {
       'access_key': ?accessKey,
       'actionKey': 'appkey',

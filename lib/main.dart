@@ -343,8 +343,13 @@ class MyApp extends StatelessWidget {
         child: child!,
       );
     }
-    if (PlatformUtils.isDesktop) {
+    if (PlatformUtils.isDesktop || Platform.isIOS) {
       return BackDetector(
+        enableEdgeSwipe: Platform.isIOS,
+        nativePopGestureInProgress: () {
+          final route = Get.routing.route;
+          return route is GetPageRoute && route.popGestureInProgress;
+        },
         onBack: _onBack,
         child: child,
       );

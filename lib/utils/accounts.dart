@@ -15,6 +15,13 @@ abstract final class Accounts {
   static Account get main => accountMode[AccountType.main.index];
   static Account get video => accountMode[AccountType.video.index];
   static Account get heartbeat => accountMode[AccountType.heartbeat.index];
+  static bool get isAnonymity =>
+      accountMode.any((account) => account.isLogin) && !heartbeat.isLogin;
+
+  /// Prevents passive browsing requests from carrying a saved app access key.
+  static String? passiveAccessKey(AccountType type) =>
+      isAnonymity ? null : get(type).accessKey;
+
   static Account get history {
     final heartbeat = Accounts.heartbeat;
     if (heartbeat is AnonymousAccount) {

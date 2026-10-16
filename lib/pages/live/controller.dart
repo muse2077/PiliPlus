@@ -1,6 +1,7 @@
 import 'package:PiliPlus/common/widgets/pair.dart';
 import 'package:PiliPlus/http/live.dart';
 import 'package:PiliPlus/http/loading_state.dart';
+import 'package:PiliPlus/models_new/live/live_feed_index/card_data_item.dart';
 import 'package:PiliPlus/models_new/live/live_feed_index/card_data_list_item.dart';
 import 'package:PiliPlus/models_new/live/live_feed_index/card_list.dart';
 import 'package:PiliPlus/models_new/live/live_feed_index/data.dart';
@@ -16,6 +17,16 @@ class LiveController extends CommonListController with AccountMixin {
   @override
   void onInit() {
     super.onInit();
+    final defaultAreas =
+        CardDataItem.kAreaEntrance.list ?? const <CardLiveItem>[];
+    final leagueIndex = defaultAreas.indexWhere((item) => item.title == '英雄联盟');
+    if (leagueIndex >= 0) {
+      final item = defaultAreas[leagueIndex];
+      areaIndex.value = leagueIndex + 1; // index 0 is the recommended feed
+      areaId = item.areaV2Id;
+      parentAreaId = item.areaV2ParentId;
+    }
+    queryTop();
     queryData();
   }
 
@@ -33,6 +44,11 @@ class LiveController extends CommonListController with AccountMixin {
 
   final Rx<Pair<LiveCardList?, LiveCardList?>> topState =
       Pair<LiveCardList?, LiveCardList?>(first: null, second: null).obs;
+
+  List<CardLiveItem> get areaItems =>
+      topState.value.second?.cardData?.areaEntranceV3?.list ??
+      CardDataItem.kAreaEntrance.list ??
+      const <CardLiveItem>[];
 
   final followController = ScrollController();
 
@@ -106,12 +122,13 @@ class LiveController extends CommonListController with AccountMixin {
         first: response.followItem,
         second: response.areaItem,
       );
-      areaIndex.value =
-          (response.areaItem?.cardData?.areaEntranceV3?.list?.indexWhere(
-                (e) => e.areaV2Id == areaId && e.areaV2ParentId == parentAreaId,
-              ) ??
-              -2) +
-          1;
+      final selectedIndex = response.areaItem?.cardData?.areaEntranceV3?.list
+          ?.indexWhere(
+            (e) => e.areaV2Id == areaId && e.areaV2ParentId == parentAreaId,
+          );
+      if (selectedIndex != null && selectedIndex >= 0) {
+        areaIndex.value = selectedIndex + 1; // index 0 is the recommended feed
+      }
     }
   }
 

@@ -13,11 +13,16 @@ import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, visibleForTesting;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:material_ui/material_ui.dart';
 
 final _setCookieReg = RegExp('(?<=)(,)(?=[^;]+?=)');
+const _userTriggeredRecommendationApis = {
+  Api.feedDislike,
+  Api.feedDislikeCancel,
+  Api.liveFeedback,
+};
 
 class AccountManager extends Interceptor {
   AccountManager();
@@ -220,14 +225,28 @@ class AccountManager extends Interceptor {
         path.contains('biliimg.com');
   }
 
-  static Account _findAccount(String path) => ApiType.loginApi.contains(path)
-      ? AnonymousAccount()
-      : Accounts.get(
-          AccountType.values.firstWhere(
-            (i) => ApiType.apiTypeSet[i]?.contains(path) == true,
-            orElse: () => AccountType.main,
-          ),
-        );
+  static Account _findAccount(String path) {
+    if (ApiType.loginApi.contains(path)) return AnonymousAccount();
+
+    final type = AccountType.values.firstWhere(
+      (i) => ApiType.apiTypeSet[i]?.contains(path) == true,
+      orElse: () => AccountType.main,
+    );
+
+    // The existing no-trace switch makes the heartbeat slot anonymous. Extend
+    // that privacy choice to recommendation/search and video URL requests,
+    // without changing the separately stored main/recommend/video accounts.
+    if (Accounts.isAnonymity &&
+        (type == AccountType.video ||
+            (type == AccountType.recommend &&
+                !_userTriggeredRecommendationApis.contains(path)))) {
+      return Accounts.heartbeat;
+    }
+    return Accounts.get(type);
+  }
+
+  @visibleForTesting
+  static Account findAccountFor(String path) => _findAccount(path);
 
   static Account _bindRequestAccount(RequestOptions options) {
     assert(options.extra['account'] is Account?);

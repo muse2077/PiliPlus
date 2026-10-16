@@ -79,99 +79,94 @@ class _LivePageState extends State<LivePage>
   }
 
   Widget _buildTop(ThemeData theme, Pair<LiveCardList?, LiveCardList?> data) {
+    final list = controller.areaItems;
+    final areaIndex = controller.areaIndex.value;
+    final selectedArea = areaIndex > 0 && areaIndex <= list.length
+        ? list[areaIndex - 1]
+        : null;
     return SliverMainAxisGroup(
       slivers: [
-        if (data.first != null) ..._buildFollowList(theme, data.first!),
-        if (data.second?.cardData?.areaEntranceV3?.list case final list?)
-          if (list.isNotEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const .only(bottom: 8.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        // 10+14*textScaler
-                        height: 10.0 + textScaler.scale(14),
-                        child: Obx(() {
-                          final areaIndex = controller.areaIndex.value;
-                          return ListView.separated(
-                            scrollDirection: .horizontal,
-                            padding: const .only(right: 8),
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(width: 12),
-                            itemBuilder: (context, index) {
-                              final isFirst = index == 0;
-                              late final item = list[index - 1];
-                              final isCurr = index == areaIndex;
-                              return SearchText(
-                                fontSize: 14,
-                                height: 1,
-                                padding: const .symmetric(
-                                  horizontal: 8,
-                                  vertical: 5,
-                                ),
-                                text: isFirst ? '推荐' : item.title!,
-                                bgColor: isCurr
-                                    ? theme.colorScheme.secondaryContainer
-                                    : Colors.transparent,
-                                textColor: isCurr
-                                    ? theme.colorScheme.onSecondaryContainer
-                                    : null,
-                                onTap: (_) => controller.onSelectArea(
-                                  index,
-                                  isFirst ? null : item,
-                                ),
-                              );
-                            },
-                            itemCount: list.length + 1,
-                          );
-                        }),
-                      ),
+        if (areaIndex == 0 && data.first != null)
+          ..._buildFollowList(theme, data.first!),
+        if (list.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const .only(bottom: 8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SearchText(
+                      fontSize: 14,
+                      height: 1,
+                      padding: const .symmetric(horizontal: 8, vertical: 5),
+                      text: selectedArea?.title ??
+                          (areaIndex == 0 ? '推荐' : '英雄联盟'),
+                      bgColor: theme.colorScheme.secondaryContainer,
+                      textColor: theme.colorScheme.onSecondaryContainer,
+                      onTap: (_) {},
                     ),
-                    iconButton(
-                      size: 26,
-                      iconSize: 18,
-                      context: context,
-                      tooltip: '切换${controller.showFirstFrame ? '封面' : '首帧'}',
-                      icon: controller.showFirstFrame
-                          ? const Icon(MdiIcons.alphaFBox)
-                          : const Icon(MdiIcons.image),
-                      onPressed: () {
-                        controller.showFirstFrame = !controller.showFirstFrame;
-                        setState(() {});
+                  ),
+                  PopupMenuButton<int>(
+                    tooltip: '其他直播栏目',
+                    icon: const Icon(Icons.more_horiz, size: 20),
+                    onSelected: (value) {
+                      if (value == -1) {
+                        Get.to(const LiveAreaPage());
+                      } else if (value == -2) {
+                        Get.to(const LiveFollowPage());
+                      } else {
+                        controller.onSelectArea(
+                          value,
+                          value == 0 ? null : list[value - 1],
+                        );
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem<int>(value: 0, child: Text('推荐')),
+                      for (var i = 0; i < list.length; i++)
+                        if (i + 1 != areaIndex)
+                          PopupMenuItem<int>(
+                            value: i + 1,
+                            child: Text(list[i].title ?? '其他'),
+                          ),
+                      const PopupMenuItem<int>(value: -2, child: Text('关注直播')),
+                      const PopupMenuItem<int>(value: -1, child: Text('全部分区')),
+                    ],
+                  ),
+                  iconButton(
+                    size: 26,
+                    iconSize: 18,
+                    context: context,
+                    tooltip: '切换${controller.showFirstFrame ? '封面' : '首帧'}',
+                    icon: controller.showFirstFrame
+                        ? const Icon(MdiIcons.alphaFBox)
+                        : const Icon(MdiIcons.image),
+                    onPressed: () {
+                      controller.showFirstFrame = !controller.showFirstFrame;
+                      setState(() {});
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  iconButton(
+                    size: 26,
+                    iconSize: 16,
+                    context: context,
+                    tooltip: '游戏赛事',
+                    icon: const Icon(Icons.gamepad),
+                    onPressed: () => Get.toNamed(
+                      '/webview',
+                      parameters: {
+                        'uaType': 'mob',
+                        'url':
+                            'https://www.bilibili.com/h5/match/data/home?navhide=1&${ThemeUtils.themeUrl(theme.isDark)}',
                       },
                     ),
-                    const SizedBox(width: 8),
-                    iconButton(
-                      size: 26,
-                      iconSize: 16,
-                      context: context,
-                      tooltip: '游戏赛事',
-                      icon: const Icon(Icons.gamepad),
-                      onPressed: () => Get.toNamed(
-                        '/webview',
-                        parameters: {
-                          'uaType': 'mob',
-                          'url':
-                              'https://www.bilibili.com/h5/match/data/home?navhide=1&${ThemeUtils.themeUrl(theme.isDark)}',
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    iconButton(
-                      size: 26,
-                      iconSize: 16,
-                      context: context,
-                      tooltip: '全部标签',
-                      icon: const Icon(Icons.widgets),
-                      onPressed: () => Get.to(const LiveAreaPage()),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
               ),
             ),
+          ),
       ],
     );
   }

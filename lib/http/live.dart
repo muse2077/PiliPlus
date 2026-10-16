@@ -33,6 +33,8 @@ import 'package:dio/dio.dart';
 
 abstract final class LiveHttp {
   static Account get recommend => Accounts.get(AccountType.recommend);
+  static String? get _passiveAccessKey =>
+      Accounts.passiveAccessKey(AccountType.recommend);
 
   static Future<LoadingState<void>> sendLiveMsg({
     required Object roomId,
@@ -195,7 +197,7 @@ abstract final class LiveHttp {
     bool moduleSelect = false,
   }) async {
     final params = {
-      'access_key': ?recommend.accessKey,
+      'access_key': ?_passiveAccessKey,
       'channel': 'master',
       'actionKey': 'appkey',
       'build': 8430300,
@@ -212,7 +214,7 @@ abstract final class LiveHttp {
       'network': 'wifi',
       'page': pn,
       'platform': 'android',
-      if (recommend.isLogin) 'relation_page': 1,
+      if (!Accounts.isAnonymity && recommend.isLogin) 'relation_page': 1,
       's_locale': 'zh_CN',
       'scale': 2,
       'statistics': Constants.statisticsApp,
@@ -268,7 +270,7 @@ abstract final class LiveHttp {
     String? sortType,
   }) async {
     final params = {
-      'access_key': ?recommend.accessKey,
+      'access_key': ?_passiveAccessKey,
       'actionKey': 'appkey',
       'channel': 'master',
       'area_id': ?areaId,
@@ -324,7 +326,7 @@ abstract final class LiveHttp {
 
   static Future<LoadingState<List<AreaList>?>> liveAreaList() async {
     final params = {
-      'access_key': ?recommend.accessKey,
+      'access_key': ?_passiveAccessKey,
       'actionKey': 'appkey',
       'build': 8430300,
       'channel': 'master',
@@ -422,7 +424,7 @@ abstract final class LiveHttp {
     required Object parentid,
   }) async {
     final params = {
-      'access_key': ?recommend.accessKey,
+      'access_key': ?_passiveAccessKey,
       'actionKey': 'appkey',
       'build': 8430300,
       'channel': 'master',
@@ -458,7 +460,7 @@ abstract final class LiveHttp {
     required LiveSearchType type,
   }) async {
     final params = {
-      'access_key': ?recommend.accessKey,
+      'access_key': ?_passiveAccessKey,
       'actionKey': 'appkey',
       'build': 8430300,
       'channel': 'master',
